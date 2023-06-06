@@ -28,8 +28,8 @@ handlers.displayDefault = async (req,res) => {
         <td><a href="/info?id=${element.id}">${element.name}</a></td>
         <td>${element.city}</td>
         <td>${element.price}</td>
-        <td>chinh sua</td>
-        <td>xoa</td>
+        <td><a href="/update?id=${element.id}">chỉnh sửa</a></td>
+        <td><a href="/delete?id=${element.id}">xóa</a></td>
         </tr>`
     })
     let dataHTML = await handlers.readFile("./src/views/index.html").catch((err)=>{
@@ -75,7 +75,11 @@ handlers.add = async (req,res)=> {
         });
         req.on("end", async () => {
             data = qs.parse(data);
-            console.log(data)
+           await HomestayModel.add(data.undefinedhomestayName,data.city,data.bed,data.toilet,data.price,data.description).catch((err)=>{
+               console.log(err.message)
+           })
+           res.writeHead(301,{"Location":"/"})
+            res.end()
         })
     }
 }
