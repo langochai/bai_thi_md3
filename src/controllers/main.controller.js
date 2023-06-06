@@ -84,11 +84,55 @@ handlers.add = async (req,res)=> {
     }
 }
 
-handlers.update = () =>{
-
+handlers.update = async (req,res) =>{
+    if(req.method === "GET"){
+        let id = await url.parse(req.url, true).query.id //type string
+        let data = await HomestayModel.displayInfo(+id)
+        let dataHTML = await handlers.readFile("./src/views/update.html")
+        dataHTML = dataHTML.replace(`action="/update"`,`action="/update?id=${id}"`)
+        dataHTML = dataHTML.replace(`"update_name"`,`"${data[0].name}"`)
+        dataHTML = dataHTML.replace(`"update_city"`,`"${data[0].city}"`)
+        dataHTML = dataHTML.replace(`"update_price"`,`${data[0].price}`)
+        dataHTML = dataHTML.replace(`"update_bed"`,`${data[0].numberOfBedRoom}`)
+        dataHTML = dataHTML.replace(`"update_toilet"`,`${data[0].numberOfToilet}`)
+        dataHTML = dataHTML.replace(`"update_description"`,`"${data[0].description}"`)
+        res.writeHead(200,{"Content-Type":"text/html"})
+        res.write(dataHTML)
+        res.end()
+    }else {
+        let id = await url.parse(req.url, true).query.id //type string
+        let data
+        req.on("data", (chunk) => {
+            data += chunk;
+        });
+        req.on("end", async () => {
+            data = qs.parse(data);
+            // console.log(id)
+            // console.log(data)
+            await HomestayModel.update(+id,data.undefinedhomestayName,data.city,data.bed,data.price,data.toilet,data.description).catch((err)=>{
+                console.log(err.message)
+            })
+            res.writeHead(301, {"Location": "/"})
+            res.end()
+        })
+    }
 }
 
-handlers.delete = ()=>{
-
+handlers.delete = async (req,res)=>{
+    if(req.method === "GET"){
+        let id = await url.parse(req.url, true).query.id //type string
+        let dataHTML = await handlers.readFile("./src/views/delete.html")
+        dataHTML = dataHTML.replace(`action="/delete"`,`action="/delete?id=${id}"`)
+        res.writeHead(200,{"Content-Type":"text/html"})
+        res.write(dataHTML)
+        res.end()
+    }else{
+        let id = await url.parse(req.url, true).query.id //type string
+        await HomestayModel.delete(+id).catch((err)=>{
+            console.log(err.message)
+        })
+        res.writeHead(301, {"Location": "/"})
+        res.end()
+    }
 }
 module.exports = handlers
